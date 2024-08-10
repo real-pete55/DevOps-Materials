@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nhfe-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nhfe
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: nhfe
+    spec:
+      containers:
+      - name: nhfeapp
+        image: webdevops/php-apache:8.2
+        volumeMounts:
+        - mountPath: /app
+          name: nhwebappvol
+
+        ports:
+        - containerPort: 80
+          name: http-web-svc
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: 0.1
+      volumes:
+      - name: nhwebappvol
+        emptyDir:
+          sizeLimit: 200Mi
