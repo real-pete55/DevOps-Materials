@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nh-ebs-volume-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nh-ebs-gp2
+  resources:
+    requests:
+      storage: 10Gi

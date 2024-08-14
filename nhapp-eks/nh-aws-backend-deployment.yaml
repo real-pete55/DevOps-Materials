@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nhbe-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nhbe
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: nhbe
+    spec:
+      containers:
+      - name: nhbeapp
+        image: mysql:latest
+        volumeMounts:
+        - mountPath: /var/lib/mysql 
+          name: nhdbvol
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysqlport
+      volumes:
+      - name: nhdbvol
+        persistentVolumeClaim:  #Added the Persisten volume instead of using a node directory
+          claimName: nh-db-ebs-volume-claim
