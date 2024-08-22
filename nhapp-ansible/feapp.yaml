@@ -1,0 +1,78 @@
+- name: Frontend App setup
+  become: yes
+  hosts: webservers
+  vars:
+    - webappdir: /app
+    - webx: /home/m/nhsite.tar
+    - port_num: 80
+  tasks:
+    - name: Installing php 8.2
+      apt: name=software-properties-common
+
+
+    - name: "PHP Repo 8.2"
+      apt_repository:
+        repo="ppa:ondrej/php"
+
+    - name: "Update repo"
+      apt: update_cache=yes
+
+    - name: Install PHP 8.2
+      apt: name=php8.2 state=present
+
+    - name: install lamp stack
+      apt:
+        pkg:
+          - php-mysql
+          - php-curl
+          - php-json
+          - php-cgi
+          - php-gd
+          - php-mbstring
+          - php-zip
+          - php-xmlrpc
+          - php-soap
+          - php-intl
+          - php-cgi
+          - libapache2-mod-php8.2
+          - libxslt-dev
+        state: present
+        update_cache: yes
+        
+    - name: install apache2
+      apt:
+        name: apache2
+        update_cache: yes
+        state: latest
+
+    - name: Extract website
+      become: yes
+      unarchive:
+        src: "{{ webx }}"
+        dest: "/"
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: Copy file with owner and permissions
+      template:
+        src: /webfiles/horizons.conf.j2
+        dest: /etc/apache2/sites-enabled/horizons.conf
+
+
+
+    - name: Remove file
+      file:
+        path: "/etc/apache2/000-default.conf"
+        state: absent
+
+    - name: Start Apache service
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: yes
+
+
+    - name: "Test NH web site"
+      uri:
+        url: http://192.168.1.90/index.html

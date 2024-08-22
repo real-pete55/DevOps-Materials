@@ -1,0 +1,35 @@
+- name: mysqlsetup
+  become: yes
+  hosts: databaseservers
+  vars:
+    - sqlpw: some_pass
+    - itemx:  /home/m/dbroot.tar
+  tasks:
+    - name: Installing Mysql
+      package:
+       name: "{{item}}"
+       state: present
+       update_cache: yes
+      loop:
+        - mysql-server
+        - mysql-client
+        - python3-mysqldb
+        - libmysqlclient-dev
+      become: yes
+    - name: Creates directory
+      ansible.builtin.file:
+        path: /var/lib/mysql
+        state: directory
+
+    - name: Extract database
+      become: yes
+      unarchive:
+        src: "{{ itemx }}"
+        dest: "/"
+        mode: 0755
+
+    - name: Start mysql service
+      ansible.builtin.service:
+        name: mysql
+        state: started
+        enabled: yes
